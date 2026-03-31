@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>El Lugar - Biblia de Estudio</title>
+    <style>
+        :root {
+            --bg: #ffffff; --txt: #333; --accent: #0056b3; --header: #f8f9fa; --border: #ddd;
+            --highlight: #ffff99; --font: 18px;
+        }
+        body.dark-mode {
+            --bg: #121212; --txt: #e0e0e0; --header: #1e1e1e; --border: #333; --accent: #66b3ff; --highlight: #444400;
+        }
+        body { font-family: sans-serif; background: var(--bg); color: var(--txt); font-size: var(--font); margin: 0; line-height: 1.6; }
+        
+        /* HEADER PRINCIPAL */
+        header { 
+            background: var(--header); padding: 10px 20px; display: flex; justify-content: space-between; 
+            align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; 
+        }
+        .logo-main { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        
+        /* NAVEGACIÓN */
+        nav { display: flex; background: var(--header); border-bottom: 1px solid var(--border); }
+        nav button { 
+            flex: 1; padding: 15px; background: none; border: none; color: var(--txt); 
+            font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        nav button.active { border-bottom: 3px solid var(--accent); color: var(--accent); }
+        .nav-icon { width: 22px; height: 22px; object-fit: contain; }
+
+        .container { padding: 15px; max-width: 800px; margin: 0 auto; }
+        .hidden { display: none !important; }
+
+        /* BIBLIA E ÍNDICE */
+        .pacto-title { border-bottom: 2px solid var(--accent); padding-bottom: 5px; margin: 25px 0 15px; }
+        .grid-libros { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
+        .btn-lib { background: var(--header); border: 1px solid var(--border); color: var(--txt); padding: 10px; border-radius: 6px; font-size: 0.9em; cursor: pointer; }
+        
+        /* LECTURA */
+        .v-box { margin-bottom: 10px; padding: 5px; border-radius: 5px; }
+        .v-highlight { background: var(--highlight); }
+        .strong-link { color: var(--accent); text-decoration: underline dotted; cursor: pointer; }
+
+        /* MODALES */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:200; }
+        .modal-content { background: var(--bg); margin: 15% auto; padding: 20px; width: 85%; max-width: 500px; border-radius: 12px; position: relative; }
+        
+        /* MURO */
+        .post { background: var(--header); border: 1px solid var(--border); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        video { width: 100%; border-radius: 8px; margin-top: 10px; background: #000; }
+        textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--txt); box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <img src="logo.jpg" class="logo-main" onerror="this.src='https://via.placeholder.com/40'">
+            <h1 style="font-size:1.1em; margin:0;">Shalom Alejein</h1>
+        </div>
+        <button onclick="toggleModal('m-config')" style="background:none; border:none; font-size:1.3em;">⚙️</button>
+    </header>
+
+    <nav>
+        <button id="nav-bib" class="active" onclick="showTab('biblia')">📖 Biblia</button>
+        <button id="nav-com" onclick="showTab('comunidad')">
+            <img src="comunidad.jpg" class="nav-icon" onerror="this.src='https://via.placeholder.com/22'"> Comunidad
+        </button>
+    </nav>
+
+    <main id="tab-biblia" class="container">
+        <div id="index-view">
+            <h2 class="pacto-title">Antiguo Pacto</h2>
+            <div id="list-at" class="grid-libros"></div>
+            <h2 class="pacto-title">Pacto Renovado</h2>
+            <div id="list-nt" class="grid-libros"></div>
+        </div>
+
+        <div id="read-view" class="hidden">
+            <button onclick="goBack()" style="margin-bottom:15px; padding:8px 15px;">⬅ Volver</button>
+            <h2 id="current-book"></h2>
+            <div id="cap-btns" style="display:flex; gap:5px; overflow-x:auto; padding-bottom:15px;"></div>
+            <div id="bible-text"></div>
+        </div>
+    </main>
+
+    <main id="tab-comunidad" class="container hidden">
+        <div class="post">
+            <textarea id="post-txt" rows="3" placeholder="Comparte una reflexión..."></textarea>
+            <input type="file" id="post-vid" accept="video/*" style="margin:10px 0;">
+            <button onclick="handleUpload()" style="width:100%; padding:12px; background:#28a745; color:white; border:none; border-radius:6px; font-weight:bold;">Publicar</button>
+            <progress id="up-prog" value="0" max="100" style="width:100%; display:none; margin-top:10px;"></progress>
+        </div>
+        <div id="muro"></div>
+    </main>
+
+    <div id="m-config" class="modal" onclick="this.style.display='none'">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3>Ajustes</h3>
+            <button onclick="document.body.classList.toggle('dark-mode')" style="width:100%; padding:10px; margin-bottom:10px;">🌓 Modo Oscuro</button>
+            <p>Tamaño Letra:</p>
+            <button onclick="updateFont('16px')">A</button> <button onclick="updateFont('20px')">A+</button> <button onclick="updateFont('24px')">A++</button>
+        </div>
+    </div>
+
+    <div id="m-strong" class="modal" onclick="this.style.display='none'">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div id="strong-data"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBhziyHZb3aO7zJzR-W2yNJyTdAckXV5zE",
+            authDomain: "biblia-el-lugar.firebaseapp.com",
+            projectId: "biblia-el-lugar",
+            storageBucket: "biblia-el-lugar.firebasestorage.app",
+            messagingSenderId: "833807649826",
+            appId: "1:833807649826:web:adb66cf043f91ec11bce7b"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.handleUpload = async function() {
+            const txt = document.getElementById('post-txt').value;
+            const file = document.getElementById('post-vid').files[0];
+            const prog = document.getElementById('up-prog');
+            let vUrl = null;
+
+            if (file) {
+                prog.style.display = 'block';
+                const fd = new FormData();
+                fd.append('file', file); fd.append('upload_preset', 'ml_default');
+                try {
+                    const res = await fetch('https://api.cloudinary.com/v1_1/dirmq04jr/video/upload', { method: 'POST', body: fd });
+                    const data = await res.json(); vUrl = data.secure_url;
+                } catch(e) { console.error("Cloudinary error"); }
+                prog.style.display = 'none';
+            }
+            await addDoc(collection(db, "reflexiones"), { texto: txt, videoUrl: vUrl, fecha: new Date() });
+            document.getElementById('post-txt').value = ''; loadMuro();
+        };
+
+        window.loadMuro = async function() {
+            const q = query(collection(db, "reflexiones"), orderBy("fecha", "desc"));
+            const snap = await getDocs(q);
+            const m = document.getElementById('muro'); m.innerHTML = '';
+            snap.forEach(doc => {
+                const data = doc.data();
+                const linkTxt = data.texto.replace(/([1-3]?\s?[A-Z][a-z]+)\s(\d+):(\d+)/g, '<b style="color:var(--accent);cursor:pointer" onclick="jumpTo(\'$1\',$2,$3)">$&</b>');
+                m.innerHTML += `<div class="post"><p style="white-space:pre-wrap">${linkTxt}</p>${data.videoUrl ? `<video controls src="${data.videoUrl}"></video>` : ''}</div>`;
+            });
+        };
+    </script>
+
+    <script>
+        let bible = []; let dics = {h1:{}, h2:{}, g:{}}; let curLib = 0;
+
+        window.onload = async () => {
+            try {
+                const res = await fetch('biblia.json');
+                bible = await res.json();
+                renderIndex();
+                // Carga dics silenciosamente
+                loadDics();
+            } catch(e) { document.getElementById('index-view').innerHTML = "<h2>Error cargando libros.</h2>"; }
+        };
+
+        async function loadDics() {
+            try {
+                dics.h1 = await fetch('strongs_h1.json').then(r => r.json());
+                dics.h2 = await fetch('strongs_h2.json').then(r => r.json());
+                dics.g = await fetch('strongs_g.json').then(r => r.json());
+            } catch(e) { console.warn("Diccionarios no cargados"); }
+        }
+
+        function renderIndex() {
+            const at = document.getElementById('list-at'); const nt = document.getElementById('list-nt');
+            at.innerHTML = ''; nt.innerHTML = '';
+            bible.forEach((l, i) => {
+                const btn = `<button class="btn-lib" onclick="openLib(${i})">${l.nombre}</button>`;
+                if(i < 39) at.innerHTML += btn; else nt.innerHTML += btn;
+            });
+        }
+
+        function openLib(i) {
+            curLib = i;
+            document.getElementById('index-view').classList.add('hidden');
+            document.getElementById('read-view').classList.remove('hidden');
+            document.getElementById('current-book').innerText = bible[i].nombre;
+            const caps = document.getElementById('cap-btns'); caps.innerHTML = '';
+            bible[i].capitulos.forEach((_, c) => {
+                caps.innerHTML += `<button id="c-btn-${c}" onclick="showCap(${c})" style="min-width:40px; height:40px;">${c+1}</button>`;
+            });
+            showCap(0);
+        }
+
+        function showCap(c) {
+            const textCont = document.getElementById('bible-text'); textCont.innerHTML = '';
+            document.querySelectorAll('#cap-btns button').forEach(b => b.style.border = "1px solid var(--border)");
+            document.getElementById('c-btn-'+c).style.border = "2px solid var(--accent)";
+
+            bible[curLib].capitulos[c].forEach((t, v) => {
+                const cleanT = t.replace(/([A-Za-zÁÉÍÓÚáéíóúñÑ]+)\s?(<[HG]\d+>)/g, (m, word, code) => {
+                    const rawCode = code.replace('<','').replace('>','');
+                    return `<span class="strong-link" onclick="openStrong('${rawCode}')">${word}</span>`;
+                });
+                textCont.innerHTML += `<div class="v-box" onclick="this.classList.toggle('v-highlight')"><b>${v+1}</b> ${cleanT}</div>`;
+            });
+            window.scrollTo(0,0);
+        }
+
+        function openStrong(cod) {
+            let d = (curLib >= 39) ? dics.g : (cod.startsWith('H1') ? dics.h1 : dics.h2);
+            let info = d[cod];
+            let def = info ? (info.definition || info.strongs_def || info) : "Definición no disponible.";
+            if(typeof def === 'string') def = def.replace(/<[^>]*>/g, "");
+            document.getElementById('strong-data').innerHTML = `<h2>${cod}</h2><p>${def}</p>`;
+            toggleModal('m-strong');
+        }
+
+        function goBack() { document.getElementById('read-view').classList.add('hidden'); document.getElementById('index-view').classList.remove('hidden'); }
+        function showTab(t) {
+            document.getElementById('tab-biblia').classList.add('hidden'); document.getElementById('tab-comunidad').classList.add('hidden');
+            document.getElementById('nav-bib').classList.remove('active'); document.getElementById('nav-com').classList.remove('active');
+            document.getElementById('tab-'+t).classList.remove('hidden'); document.getElementById('nav-'+t).classList.add('active');
+            if(t === 'comunidad') window.loadMuro();
+        }
+        window.jumpTo = (l,c,v) => {
+            const i = bible.findIndex(lib => lib.nombre.toLowerCase().includes(l.toLowerCase()));
+            if(i !== -1) { showTab('biblia'); openLib(i); showCap(c-1); }
+        };
+        function toggleModal(id) { const m = document.getElementById(id); m.style.display = (m.style.display === 'block') ? 'none' : 'block'; }
+        function updateFont(s) { document.documentElement.style.setProperty('--font', s); }
+    </script>
+</body>
+</html>
