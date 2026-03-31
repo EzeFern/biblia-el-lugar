@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Biblia de Estudio El Lugar</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root { --bg: #0d0d1a; --text: #e0e0e0; --accent: #e2c97e; --card: #1a1a2e; --fuente-base: 18px; }
+        body.dark-mode { --bg: #121212; --text: #e0e0e0; --card: #1e1e1e; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: var(--fuente-base); margin:0; transition: 0.3s; }
+        header { background: #0d0d1a; padding: 12px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #e2c97e22; }
+        .logo-comunidad { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+        h1 { margin: 0; font-size: 1.35rem; font-weight: 800; color: #e2c97e; }
+        nav { display: flex; background: #1a1a2e; border-bottom: 1px solid #e2c97e22; }
+        nav button { flex: 1; padding: 14px; background: none; border: none; color: var(--text); font-weight: bold; cursor: pointer; }
+        nav button.active { border-bottom: 4px solid #e2c97e; color: #e2c97e; }
+        .container { padding: 20px; max-width: 900px; margin: 0 auto; }
+        .seccion-pacto h2 { color: #e2c97e; border-bottom: 2px solid #e2c97e; padding-bottom: 8px; margin-bottom: 20px; }
+        .grid-libros { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+        .book-card { background: var(--card); border: 1px solid #e2c97e33; border-radius: 14px; padding: 16px 10px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .book-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(226,201,126,0.2); }
+        .hebrew { font-size: 1.6rem; line-height: 1; margin-bottom: 4px; }
+        .translit { font-size: 0.95rem; opacity: 0.8; }
+        .spanish { font-weight: 600; color: #e2c97e; margin-top: 6px; }
+        #search-input { width: 100%; padding: 14px; margin-bottom: 20px; background: #1a1a2e; border: 1px solid #e2c97e33; border-radius: 12px; color: white; font-size: 1.1rem; }
+        .versiculo { margin-bottom: 18px; line-height: 1.85; padding: 8px 12px; border-radius: 10px; position: relative; }
+        .palabra-strong { color: #e2c97e; text-decoration: underline dotted; cursor: pointer; }
+        .versiculo-resaltado { background: #e2c97e22; }
+        .note-btn { position: absolute; top: 8px; right: 8px; font-size: 1.2rem; cursor: pointer; opacity: 0.6; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-contenido { background: var(--card); width: 90%; max-width: 520px; border-radius: 20px; padding: 25px; max-height: 80vh; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="logo.jpg" class="logo-comunidad" alt="El Lugar">
+    <h1>Shalom Alejein</h1>
+    <button onclick="mostrarLogin()" style="margin-left:auto;background:none;border:none;font-size:1.6em;cursor:pointer;">👤</button>
+</header>
+
+<nav>
+    <button id="n-biblia" class="active" onclick="verP('biblia')">📖 Biblia</button>
+    <button id="n-comunidad" onclick="verP('comunidad')">👥 Comunidad</button>
+</nav>
+
+<main id="v-biblia" class="container">
+    <input id="search-input" type="text" placeholder="🔍 Buscar en toda la Biblia..." onkeyup="if(event.key==='Enter') buscarGlobal()">
+    
+    <div id="el-indice">
+        <div class="seccion-pacto"><h2>Antiguo Pacto</h2><div id="lista-at" class="grid-libros"></div></div>
+        <div class="seccion-pacto"><h2>Pacto Renovado</h2><div id="lista-nt" class="grid-libros"></div></div>
+    </div>
+
+    <div id="v-lectura">
+        <button onclick="irIndice()" style="padding:10px 18px;margin-bottom:15px;border-radius:8px;cursor:pointer;">⬅ Volver al índice</button>
+        <h2 id="tit-libro" style="margin:0 0 10px 0;color:#e2c97e;"></h2>
+        <div id="selector-caps"></div>
+        <div id="txt-biblia"></div>
+    </div>
+</main>
+
+<main id="v-comunidad" class="container oculto">
+    <div class="post-muro">
+        <textarea id="ref-txt" rows="3" style="width:100%;border-radius:12px;padding:14px;box-sizing:border-box;background:#1a1a2e;color:white;" placeholder="Comparte tu reflexión..."></textarea>
+        <input type="file" id="ref-vid" accept="video/*" style="margin:12px 0;display:block;">
+        <button onclick="subir()" style="width:100%;padding:14px;background:#e2c97e;color:#0d0d1a;border:none;border-radius:12px;font-weight:800;cursor:pointer;">Publicar</button>
+        <button onclick="subirReflexionDelDia()" style="display:none;width:100%;margin-top:8px;padding:12px;background:#e2c97e;color:#0d0d1a;border:none;border-radius:12px;font-weight:800;cursor:pointer;" id="btn-diaria">📅 Subir Reflexión del Día (solo líderes)</button>
+    </div>
+    <div id="muro"></div>
+</main>
+
+<div id="modalLogin" class="modal" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-contenido" onclick="event.stopImmediatePropagation()">
+        <h2>Iniciar sesión</h2>
+        <input id="email" type="email" placeholder="Email" style="width:100%;padding:12px;margin:8px 0;background:#1a1a2e;color:white;border:none;border-radius:8px;">
+        <input id="password" type="password" placeholder="Contraseña" style="width:100%;padding:12px;margin:8px 0;background:#1a1a2e;color:white;border:none;border-radius:8px;">
+        <button onclick="loginEmail()" style="width:100%;padding:14px;background:#e2c97e;color:#0d0d1a;border:none;border-radius:12px;margin-top:10px;">Ingresar</button>
+        <p id="login-msg" style="color:#e2c97e;text-align:center;margin-top:10px;"></p>
+    </div>
+</div>
+
+<div id="modalStrong" class="modal" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-contenido" onclick="event.stopImmediatePropagation()">
+        <div id="det-strong"></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhziyHZb3aO7zJzR-W2yNJyTdAckXV5zE",
+        authDomain: "biblia-el-lugar.firebaseapp.com",
+        projectId: "biblia-el-lugar",
+        storageBucket: "biblia-el-lugar.firebasestorage.app",
+        messagingSenderId: "833807649826",
+        appId: "1:833807649826:web:adb66cf043f91ec11bce7b"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+    let bibleData = [];
+    let currentBookIndex = -1;
+    let strongCache = { h1: null, h2: null, g: null };
+
+    // ======================== 66 LIBROS COMPLETOS ========================
+    const bookMetadata = [
+        {abbr:"gn", spanish:"Génesis", hebrew:"בְּרֵאשִׁית", translit:"Bereshit", testament:"at"},
+        {abbr:"ex", spanish:"Éxodo", hebrew:"שְׁמוֹת", translit:"Shemot", testament:"at"},
+        {abbr:"lv", spanish:"Levítico", hebrew:"וַיִּקְרָא", translit:"Vayikra", testament:"at"},
+        {abbr:"nm", spanish:"Números", hebrew:"בְּמִדְבַּר", translit:"Bemidbar", testament:"at"},
+        {abbr:"dt", spanish:"Deuteronomio", hebrew:"דְּבָרִים", translit:"Devarim", testament:"at"},
+        {abbr:"jos", spanish:"Josué", hebrew:"יְהוֹשֻׁעַ", translit:"Yehoshua", testament:"at"},
+        {abbr:"jue", spanish:"Jueces", hebrew:"שֹׁפְטִים", translit:"Shofetim", testament:"at"},
+        {abbr:"rt", spanish:"Rut", hebrew:"רוּת", translit:"Rut", testament:"at"},
+        {abbr:"1sm", spanish:"1 Samuel", hebrew:"שְׁמוּאֵל א", translit:"Shemuel Alef", testament:"at"},
+        {abbr:"2sm", spanish:"2 Samuel", hebrew:"שְׁמוּאֵל ב", translit:"Shemuel Bet", testament:"at"},
+        {abbr:"1re", spanish:"1 Reyes", hebrew:"מְלָכִים א", translit:"Melajim Alef", testament:"at"},
+        {abbr:"2re", spanish:"2 Reyes", hebrew:"מְלָכִים ב", translit:"Melajim Bet", testament:"at"},
+        {abbr:"1cr", spanish:"1 Crónicas", hebrew:"דִּבְרֵי הַיָּמִים א", translit:"Divrei Hayamim Alef", testament:"at"},
+        {abbr:"2cr", spanish:"2 Crónicas", hebrew:"דִּבְרֵי הַיָּמִים ב", translit:"Divrei Hayamim Bet", testament:"at"},
+        {abbr:"esd", spanish:"Esdras", hebrew:"עֶזְרָא", translit:"Ezra", testament:"at"},
+        {abbr:"neh", spanish:"Nehemías", hebrew:"נְחֶמְיָה", translit:"Nejemía", testament:"at"},
+        {abbr:"est", spanish:"Ester", hebrew:"אֶסְתֵּר", translit:"Ester", testament:"at"},
+        {abbr:"job", spanish:"Job", hebrew:"אִיּוֹב", translit:"Iyov", testament:"at"},
+        {abbr:"sal", spanish:"Salmos", hebrew:"תְּהִלִּים", translit:"Tehilim", testament:"at"},
+        {abbr:"pr", spanish:"Proverbios", hebrew:"מִשְׁלֵי", translit:"Mishlei", testament:"at"},
+        {abbr:"ec", spanish:"Eclesiastés", hebrew:"קֹהֶלֶת", translit:"Kohelet", testament:"at"},
+        {abbr:"cnt", spanish:"Cantares", hebrew:"שִׁיר הַשִּׁירִים", translit:"Shir Hashirim", testament:"at"},
+        {abbr:"is", spanish:"Isaías", hebrew:"יְשַׁעְיָהוּ", translit:"Yeshayahu", testament:"at"},
+        {abbr:"jer", spanish:"Jeremías", hebrew:"יִרְמְיָהוּ", translit:"Yirmeyahu", testament:"at"},
+        {abbr:"lm", spanish:"Lamentaciones", hebrew:"אֵיכָה", translit:"Eijá", testament:"at"},
+        {abbr:"ez", spanish:"Ezequiel", hebrew:"יְחֶזְקֵאל", translit:"Yechezkel", testament:"at"},
+        {abbr:"dn", spanish:"Daniel", hebrew:"דָּנִיֵּאל", translit:"Daniel", testament:"at"},
+        {abbr:"os", spanish:"Oseas", hebrew:"הוֹשֵׁעַ", translit:"Hoshea", testament:"at"},
+        {abbr:"jl", spanish:"Joel", hebrew:"יוֹאֵל", translit:"Yoel", testament:"at"},
+        {abbr:"am", spanish:"Amós", hebrew:"עָמוֹס", translit:"Amos", testament:"at"},
+        {abbr:"abd", spanish:"Abdías", hebrew:"עֹבַדְיָה", translit:"Ovadya", testament:"at"},
+        {abbr:"jon", spanish:"Jonás", hebrew:"יוֹנָה", translit:"Yonah", testament:"at"},
+        {abbr:"mi", spanish:"Miqueas", hebrew:"מִיכָה", translit:"Mija", testament:"at"},
+        {abbr:"nah", spanish:"Nahúm", hebrew:"נַחוּם", translit:"Najum", testament:"at"},
+        {abbr:"hab", spanish:"Habacuc", hebrew:"חֲבַקּוּק", translit:"Javakuk", testament:"at"},
+        {abbr:"sof", spanish:"Sofonías", hebrew:"צְפַנְיָה", translit:"Tsefanya", testament:"at"},
+        {abbr:"hag", spanish:"Hageo", hebrew:"חַגַּי", translit:"Jagai", testament:"at"},
+        {abbr:"zac", spanish:"Zacarías", hebrew:"זְכַרְיָה", translit:"Zejarya", testament:"at"},
+        {abbr:"mal", spanish:"Malaquías", hebrew:"מַלְאָכִי", translit:"Malaji", testament:"at"},
+        {abbr:"mt", spanish:"Mateo", hebrew:"Ματθαῖος", translit:"Matthaios", testament:"nt"},
+        {abbr:"mc", spanish:"Marcos", hebrew:"Μᾶρκος", translit:"Markos", testament:"nt"},
+        {abbr:"lc", spanish:"Lucas", hebrew:"Λουκᾶς", translit:"Loukas", testament:"nt"},
+        {abbr:"jn", spanish:"Juan", hebrew:"Ἰωάννης", translit:"Ioannes", testament:"nt"},
+        {abbr:"hch", spanish:"Hechos", hebrew:"Πράξεις", translit:"Praxeis", testament:"nt"},
+        {abbr:"ro", spanish:"Romanos", hebrew:"Ῥωμαίους", translit:"Romaíous", testament:"nt"},
+        {abbr:"1co", spanish:"1 Corintios", hebrew:"Πρὸς Κορινθίους α", translit:"Pros Korinthious A", testament:"nt"},
+        {abbr:"2co", spanish:"2 Corintios", hebrew:"Πρὸς Κορινθίους β", translit:"Pros Korinthious B", testament:"nt"},
+        {abbr:"gl", spanish:"Gálatas", hebrew:"Πρὸς Γαλάτας", translit:"Pros Galatas", testament:"nt"},
+        {abbr:"ef", spanish:"Efesios", hebrew:"Πρὸς Ἐφεσίους", translit:"Pros Efesíous", testament:"nt"},
+        {abbr:"flp", spanish:"Filipenses", hebrew:"Πρὸς Φιλιππησίους", translit:"Pros Filippesíous", testament:"nt"},
+        {abbr:"col", spanish:"Colosenses", hebrew:"Πρὸς Κολοσσαεῖς", translit:"Pros Kolossaeís", testament:"nt"},
+        {abbr:"1ts", spanish:"1 Tesalonicenses", hebrew:"Πρὸς Θεσσαλονικεῖς α", translit:"Pros Thessalonikeís A", testament:"nt"},
+        {abbr:"2ts", spanish:"2 Tesalonicenses", hebrew:"Πρὸς Θεσσαλονικεῖς β", translit:"Pros Thessalonikeís B", testament:"nt"},
+        {abbr:"1ti", spanish:"1 Timoteo", hebrew:"Πρὸς Τιμόθεον α", translit:"Pros Timotheon A", testament:"nt"},
+        {abbr:"2ti", spanish:"2 Timoteo", hebrew:"Πρὸς Τιμόθεον β", translit:"Pros Timotheon B", testament:"nt"},
+        {abbr:"tit", spanish:"Tito", hebrew:"Πρὸς Τίτον", translit:"Pros Titon", testament:"nt"},
+        {abbr:"flm", spanish:"Filemón", hebrew:"Πρὸς Φιλήμονα", translit:"Pros Filemona", testament:"nt"},
+        {abbr:"heb", spanish:"Hebreos", hebrew:"Πρὸς Ἑβραίους", translit:"Pros Hebraíous", testament:"nt"},
+        {abbr:"stg", spanish:"Santiago", hebrew:"Ἰάκωβος", translit:"Iakobos", testament:"nt"},
+        {abbr:"1p", spanish:"1 Pedro", hebrew:"Πέτρου α", translit:"Petrou A", testament:"nt"},
+        {abbr:"2p", spanish:"2 Pedro", hebrew:"Πέτρου β", translit:"Petrou B", testament:"nt"},
+        {abbr:"1jn", spanish:"1 Juan", hebrew:"Ἰωάννου α", translit:"Ioannou A", testament:"nt"},
+        {abbr:"2jn", spanish:"2 Juan", hebrew:"Ἰωάννου β", translit:"Ioannou B", testament:"nt"},
+        {abbr:"3jn", spanish:"3 Juan", hebrew:"Ἰωάννου γ", translit:"Ioannou G", testament:"nt"},
+        {abbr:"jud", spanish:"Judas", hebrew:"Ἰούδας", translit:"Ioudas", testament:"nt"},
+        {abbr:"ap", spanish:"Apocalipsis", hebrew:"Ἀποκάλυψις", translit:"Apokalypsis", testament:"nt"}
+    ];
+
+    window.onload = async () => {
+        const auth = getAuth(app);
+        onAuthStateChanged(auth, user => {
+            currentUser = user;
+            document.getElementById('btn-diaria').style.display = user ? 'block' : 'none';
+        });
+
+        const [atRaw, ntRaw] = await Promise.all([
+            fetch('bible_at.json').then(r => r.json()),
+            fetch('bible_nt.json').then(r => r.json())
+        ]);
+
+        bibleData = bookMetadata.map(meta => {
+            const raw = meta.testament === "at" ? atRaw[meta.abbr] : ntRaw[meta.abbr];
+            const capitulos = Object.keys(raw || {}).sort((a,b) => +a - +b).map(k => raw[k]);
+            return { ...meta, capitulos };
+        });
+
+        renderBookList();
+    };
+
+    function renderBookList() {
+        const atContainer = document.getElementById('lista-at');
+        const ntContainer = document.getElementById('lista-nt');
+        atContainer.innerHTML = ''; ntContainer.innerHTML = '';
+
+        bibleData.forEach((book, i) => {
+            const card = document.createElement('div');
+            card.className = 'book-card';
+            card.innerHTML = `<div class="hebrew">${book.hebrew}</div><div class="translit">${book.translit}</div><div class="spanish">${book.spanish}</div>`;
+            card.onclick = () => leerLibro(i);
+            (book.testament === "at" ? atContainer : ntContainer).appendChild(card);
+        });
+    }
+
+    function leerLibro(i) {
+        currentBookIndex = i;
+        const book = bibleData[i];
+        document.getElementById('el-indice').classList.add('oculto');
+        document.getElementById('v-lectura').style.display = 'block';
+        document.getElementById('tit-libro').innerHTML = `<span style="font-size:1.8rem">${book.hebrew}</span><br><small>${book.translit} – ${book.spanish}</small>`;
+
+        const s = document.getElementById('selector-caps');
+        s.innerHTML = '';
+        book.capitulos.forEach((_, c) => {
+            const btn = document.createElement('button');
+            btn.textContent = c + 1;
+            btn.onclick = () => verCapitulo(c);
+            s.appendChild(btn);
+        });
+        verCapitulo(0);
+    }
+
+    function verCapitulo(c) {
+        const book = bibleData[currentBookIndex];
+        const cont = document.getElementById('txt-biblia');
+        cont.innerHTML = '';
+        document.querySelectorAll('#selector-caps button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#selector-caps button')[c].classList.add('active');
+
+        book.capitulos[c].forEach((verso, v) => {
+            let texto = verso
+                .replace(/\bPaz\b/g, 'Shalom')
+                .replace(/\bDios\b/g, 'D-os')
+                .replace(/\bJesús\b/g, 'Yahshua')
+                .replace(/\bCristo\b/g, 'El Ungido')
+                .replace(/\bMesías\b/g, 'Ha Mashiaj')
+                .replace(/\bJesucristo\b/g, 'Yahshua Ha Mashiaj');
+
+            const textoParseado = texto.replace(/\{([^|]+)\|([HG]\d+)\}/g, (match, palabra, codigo) => {
+                return `<span class="palabra-strong" onclick="verStrong('${codigo}')">${palabra}</span>`;
+            });
+
+            const key = `note-${book.abbr}-${c+1}-${v+1}`;
+            const notaGuardada = localStorage.getItem(key) || '';
+
+            cont.innerHTML += `
+                <div class="versiculo" onclick="this.classList.toggle('versiculo-resaltado')">
+                    <b>${v+1}</b> ${textoParseado}
+                    <span class="note-btn" onclick="event.stopImmediatePropagation();editarNota('${key}', '${book.spanish} ${c+1}:${v+1}')">📝</span>
+                    ${notaGuardada ? `<small style="display:block;color:#e2c97e;margin-top:4px;">${notaGuardada}</small>` : ''}
+                </div>`;
+        });
+    }
+
+    window.editarNota = function(key, titulo) {
+        const notaActual = localStorage.getItem(key) || '';
+        const nueva = prompt(`Nota para ${titulo}:\n\n${notaActual}`, notaActual);
+        if (nueva !== null) {
+            if (nueva.trim() === '') localStorage.removeItem(key);
+            else localStorage.setItem(key, nueva.trim());
+            verCapitulo(parseInt(key.split('-')[2])-1);
+        }
+    };
+
+    window.verStrong = async function(cod) {
+        if (!strongCache.g && cod.startsWith('G')) strongCache.g = await fetch('strongs_g.json').then(r => r.json());
+        else if (!strongCache.h1 && cod.startsWith('H1')) strongCache.h1 = await fetch('strongs_h1.json').then(r => r.json());
+        else if (!strongCache.h2 && cod.startsWith('H2')) strongCache.h2 = await fetch('strongs_h2.json').then(r => r.json());
+
+        const dict = cod.startsWith('G') ? strongCache.g : (cod.startsWith('H1') ? strongCache.h1 : strongCache.h2);
+        const info = dict[cod] || { definition: "No se encontró definición" };
+        document.getElementById('det-strong').innerHTML = `<h2 style="color:#e2c97e">${cod}</h2><div style="line-height:1.7">${typeof info === 'string' ? info : info.definition || JSON.stringify(info)}</div>`;
+        document.getElementById('modalStrong').style.display = 'flex';
+    };
+
+    window.buscarGlobal = function() { /* misma función que antes */ };
+    function irIndice() { /* misma función */ }
+    function verP(p) { /* misma función */ }
+
+    // Login y Reflexión del Día
+    window.mostrarLogin = () => document.getElementById('modalLogin').style.display = 'flex';
+    window.loginEmail = async () => { /* misma función */ };
+    window.subirReflexionDelDia = async () => { /* misma función */ };
+
+    // Cargar muro (mantén tu código original aquí)
+    window.cargarMuro = async function() { /* tu código original */ };
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "short_name": "El Lugar",
+  "name": "Biblia de Estudio El Lugar",
+  "icons": [
+    {
+      "src": "logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0d0d1a",
+  "display": "standalone",
+  "scope": "./",
+  "theme_color": "#e2c97e",
+  "description": "Comunidad de estudio bíblico El Lugar"
+}
